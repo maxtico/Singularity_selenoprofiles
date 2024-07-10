@@ -1,0 +1,41 @@
+Bootstrap: docker
+
+From: continuumio/miniconda3
+
+%files
+    sp4.yml
+
+%post
+    # Install system dependencies including gcc
+    apt-get update && \
+    apt-get install -y build-essential libz-dev libbz2-dev liblzma-dev gcc
+
+    # Creating environment
+    /opt/conda/bin/conda env create -f sp4.yml
+
+    # Assess annotation
+    git clone https://github.com/maxtico/assess_annotation.git assess_annotation/
+
+    # Available
+    chmod +x assess_annotation/checking_annotations.py
+
+    # Activate the conda environment
+    echo 'source /opt/conda/etc/profile.d/conda.sh' >> ~/.bashrc
+    echo 'conda activate sp4' >> ~/.bashrc
+
+    # Installing pyranges
+    /opt/conda/envs/sp4/bin/pip install pyranges==0.0.120 pyrle
+
+    # Selenoprotein profiles setup and download
+    /opt/conda/envs/sp4/bin/selenoprofiles -setup
+    mkdir -p /root/selenoprofiles_data
+    wget -qO- https://mariottigenomicslab.bio.ub.edu/selenoprofiles_data/selenoprotein_profiles.tar.gz | tar xvz -C /root/selenoprofiles_data
+    wget -qO- https://mariottigenomicslab.bio.ub.edu/selenoprofiles_data/gene_ontology.tar.gz | tar xvz -C /root/selenoprofiles_data
+    wget -qO- https://mariottigenomicslab.bio.ub.edu/selenoprofiles_data/uniref50_seleno_sim.fasta.gz | gunzip -c > /root/selenoprofiles_data/uniref50_seleno_sim.fasta
+
+%environment
+    # Activate the conda environment
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate sp4
+
+
